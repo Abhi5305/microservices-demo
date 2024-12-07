@@ -1,0 +1,46 @@
+name: maven build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build and Test All Services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - discovery-server
+          - movie-catalog-service
+          - movie-info-service
+          - rating-data-service
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up JDK
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21' # Use the version required by your services
+
+      # Cache Maven dependencies
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Build and test each service
+      - name: Build and Test Service
+        run: |
+          cd ${{ matrix.service }}
+          mvn clean install
